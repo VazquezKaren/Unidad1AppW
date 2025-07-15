@@ -31,30 +31,43 @@ export const updateProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     const updates = req.body;
 
-    const product = await Product.findOneAndUpdate({ id }, updates, { new: true });
-    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
+    const product = await Product.findByIdAndUpdate(id, updates, { new: true });
 
-    return res.json({ product });
+    if (!product) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    return res.json({ message: "Producto actualizado correctamente", product });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
 };
 
-// DELETE (status = "eliminado")
+
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
     const product = await Product.findOneAndUpdate(
       { id },
-      { status: 'eliminado', deleteDate: new Date() },
+      {
+        $set: {
+          status: "eliminado",
+          deleteDate: new Date(),
+        },
+      },
       { new: true }
     );
 
-    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (!product) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
 
-    return res.json({ message: 'Producto marcado como eliminado', product });
+    return res.json({ message: "Producto marcado como eliminado", product });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
 };
+
+
+

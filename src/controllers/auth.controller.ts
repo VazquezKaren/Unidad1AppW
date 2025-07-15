@@ -26,12 +26,15 @@ export const login = async (req: Request, res: Response) => {
 
     const accessToken = generateAccessToken(user.id);
 
+    //agregar token 
+
+
     //inicializar servicio de cache de node
     
     //agregar tiempo el token al cache
 
     cache.set(user.id, accessToken, 60* 30);
-    res.json({ accessToken});
+    res.json({ accessToken, user});
 
     // el primer parametro es la llave unica para identificar en el cahe es decir el userId, para que cuando se use. Despues la info que quiero guardar y el tiempo de expiracion que es accessToken
 
@@ -110,29 +113,41 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
 // }
 
-export const saveUser= async (req: Request, res: Response) => {
-    try {
-        const {name, email, password, role, phone} = req.body;
-    //tiene que estar igual que arriba, pero si le ponemos diferente se pone email2, abajo email: email2
-        const hashedPassword = await hash(password, 10); //encriptar la contraseña
-        const newUser = new User({
-            name,
-            email,
-            password: hashedPassword,
-            role,
-            phone,
-            createDate: new Date(),
-            status: true
-        });
+export const saveUser = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password, role, phone } = req.body;
+
+    // Validación mínima
+    if (!name || !email || !password || !role || !phone) {
+      return res.status(400).json({ message: "Faltan datos obligatorios" });
+    }
+
+    // Validar duplicado
+    const existe = await User.findOne({ email });
+    if (existe) {
+      return res.status(409).json({ message: "El correo ya está registrado" });
+    }
+
+    const hashedPassword = await hash(password, 10);
+
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      phone,
+      createDate: new Date(),
+      status: true
+    });
+
     const user = await newUser.save();
 
-    return res.json({user});
-    } catch (error) {
-        console.log('Error al guardar el usuario:', error);
-        return res.status(426).json({error });
-    }
-    
-    
+    return res.status(201).json({ user });
+
+  } catch (error) {
+    console.error("Error al guardar el usuario:", error);
+    return res.status(500).json({ message: "Error interno", error });
+  }
 };
 
 export const updateUser = async (req: Request, res: Response) => {  
@@ -190,5 +205,9 @@ export const deleteUser = async (req: Request, res: Response) =>{
         return res.status(500).json({ error: 'Error al eliminar el usuario' });
     }
 }
+
+
+
+
 
 

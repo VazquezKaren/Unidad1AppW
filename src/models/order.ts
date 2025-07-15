@@ -50,7 +50,9 @@ const orderSchema = new Schema<IOrder>({
   },
   status: {
     type: String,
-    required: true
+  enum: ["Pendiente", "Pagado"],
+  required: true,
+  default: "Pendiente"
   },
   products: {
     type: [orderProductSchema],
